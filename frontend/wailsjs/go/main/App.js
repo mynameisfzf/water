@@ -6,6 +6,10 @@ export function GetBackFiles() {
   return window['go']['main']['App']['GetBackFiles']();
 }
 
+export function GetSetImage() {
+  return window['go']['main']['App']['GetSetImage']();
+}
+
 export function GetWaterFiles() {
   return window['go']['main']['App']['GetWaterFiles']();
 }

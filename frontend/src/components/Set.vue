@@ -20,13 +20,15 @@
 <script setup>
  
  import {ref} from 'vue'
-
+ import {GetSetImage} from '../../wailsjs/go/main/App.js'
  const top=ref(0)
  const left=ref(0)
  const width=ref(100)
  const height=ref(100)
  
- 
+ GetSetImage().then((ret)=>{
+    //console.log(ret)
+ })
 </script>
 <style scoped>
 .ctx{

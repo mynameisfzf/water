@@ -57,7 +57,7 @@ const select=()=>{
 }
 .images .item{
     margin: 10px;
-    width: calc(100%/3 - 20px);
+    width: calc(100%/6 - 10px);
 }
 .images img{
     width:100%;
