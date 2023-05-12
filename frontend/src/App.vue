@@ -1,9 +1,9 @@
 <template>
    <div class="warp">
     <div class="menu">
-      <router-link class="button" :class="{active:btnIndex===0}" @click="changeBtn(0)" to="/">背景图</router-link>
-      <router-link class="button" :class="{active:btnIndex===1}" @click="changeBtn(1)" to="/water">水印图</router-link>
-      <router-link class="button" :class="{active:btnIndex===2}" @click="changeBtn(2)" to="/set">模板</router-link>
+      <router-link v-if="store.state.iswork===false" class="button" :class="{active:btnIndex===0}" @click="changeBtn(0)" to="/">背景图</router-link>
+      <router-link v-if="store.state.iswork===false" class="button" :class="{active:btnIndex===1}" @click="changeBtn(1)" to="/water">水印图</router-link>
+      <router-link v-if="store.state.iswork===false" class="button" :class="{active:btnIndex===2}" @click="changeBtn(2)" to="/set">模板</router-link>
       <router-link class="button" :class="{active:btnIndex===3}" @click="changeBtn(3)" to="/start">生成</router-link>
    </div>
    <div class="content">

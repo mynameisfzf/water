@@ -1,7 +1,7 @@
 <template>
     <div class="ctx">
         <div class="top">
-            <span class="btn" @click="select">选择水印图</span>
+            <span class="btn" @click="select" v-if="store.state.iswork===false">选择水印图</span>
         </div>
       
         <div class="images">
@@ -44,10 +44,13 @@ const select=()=>{
 .ctx .top span{
     display: inline-block;
     width:100px;
-    height: 50px;
-    line-height: 50px;
+    height: 46px;
+    line-height: 46px;
     cursor: pointer;
     margin-right: 20px;
+    background-color: #409eff;
+    border-radius: 5px;
+    text-align: center;
 }
 .images{
     display: flex;

@@ -13,3 +13,7 @@ export function Greet(arg1:string):Promise<string>;
 export function SelectBackFiles():Promise<void>;
 
 export function SelectWaterFiles():Promise<void>;
+
+export function SetOutDir():Promise<string>;
+
+export function Start(arg1:number,arg2:number,arg3:number,arg4:number):Promise<void>;

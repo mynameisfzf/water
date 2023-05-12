@@ -25,3 +25,11 @@ export function SelectBackFiles() {
 export function SelectWaterFiles() {
   return window['go']['main']['App']['SelectWaterFiles']();
 }
+
+export function SetOutDir() {
+  return window['go']['main']['App']['SetOutDir']();
+}
+
+export function Start(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['Start'](arg1, arg2, arg3, arg4);
+}

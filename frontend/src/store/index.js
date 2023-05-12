@@ -6,7 +6,8 @@ export default createStore({
             backfile:[],
             waterfile:[],
             routeIndex:0,
-
+            outdir:"",
+            iswork:false,
             backfileConfig:{
                 src:"",
                 width:300,
@@ -32,6 +33,12 @@ export default createStore({
         },
         setWaterfile(state,payload){
             state.waterfile=payload
+        },
+        setOutdir(state,payload){
+            state.outdir=payload.value
+        },
+        setIswork(state,payload){
+            state.iswork=payload.value
         },
         setBackfileConfig(state,payload){
 

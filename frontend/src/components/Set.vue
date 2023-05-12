@@ -73,6 +73,7 @@
     return `width:${store.state.backfileConfig.width}px;height:${store.state.backfileConfig.height}px;`
  })
 
+ //image拖动结束
  const dragend=(e)=>{
     console.log(e)
     let x=e.clientX-dregStartX.value
@@ -82,12 +83,13 @@
     store.commit("setWaterfileConfig",{left:e.target.offsetLeft+x,top:e.target.offsetTop+y})
  }
  
+ //开始拖动image
  const drag=(e)=>{
     console.log(e)
     dregStartX.value=e.clientX
     dragStartY.value=e.clientY
  }
- 
+
  GetSetImage().then((ret)=>{
  
     const {WaterFile,BackFile,BackWidth,BackHeight}= ret
