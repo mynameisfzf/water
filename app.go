@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"image"
 	"image/draw"
 	"image/gif"
@@ -46,11 +45,6 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
-}
-
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
 
 func (a *App) SelectBackFiles() {
@@ -122,7 +116,7 @@ func (a *App) SetOutDir() string {
 	return dir
 }
 
-func (a *App) Start(top, left, width, height int) {
+func (a *App) Start(outdir string, top, left, width, height int) {
 
 }
 

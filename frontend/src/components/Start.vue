@@ -1,7 +1,10 @@
 <template>
     <div class="ctx">
-        <div>
-            <div class="set-dir"><span class="dir">{{ store.state.outdir }}</span>  <span class="btn" @click="select">浏览</span></div>
+        <div class="z-flex">
+             <div class="dir bot">{{ store.state.outdir }}</div>  <div class="btn" @click="select">浏览</div>
+        </div>
+        <div class="z-flex">
+            <div class="dir"></div>  <div class="btn" @click="starter">开始</div>
         </div>
     </div>
 </template>
@@ -17,46 +20,54 @@ const select=()=>{
     })
 
 }
+const starter=()=>{
+
+}
 </script>
 <style scoped>
 .ctx{
     width:90%;
     margin:20px auto;
+    display: flex;
+    flex-flow: column nowrap;
 }
-.ctx>div{
+.ctx .z-flex{
     width:100%;
-    height: 100vh;
+    height: 50vh;
     display: flex;
     flex-direction: row;
     justify-content: center;
-    line-height: 100vh;
+    align-items: center;
+    line-height: 50vh;
+   
 }
 
-.ctx .set-dir{
-    height: 40px;
-    line-height: 40px;
-    border: 1px solid red;
+.ctx .bot{
+    border-bottom: 1px solid #ffffff;
 }
 
 .ctx .dir{
-    display: inline-block;
     width: 400px;
     height: 40px;
     line-height: 40px;
-    margin-right: 10px;
-    border: 1px solid #d1d1d1;
+    margin-right: 10px;  
     padding: 0 5px;
     text-align: left;
 }
 
+.ctx .border{
+    border: 1px solid #d1d1d1;
+}
+
 .ctx .btn{
-    display: inline-block;
     width:80px;
     height: 40px;
     line-height: 40px;
     cursor: pointer;
     background-color: #409eff;
     border-radius: 5px;
-    /* margin-right: 20px; */
+    
 }
+
+
 </style>
