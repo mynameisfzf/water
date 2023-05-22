@@ -2,6 +2,11 @@ import {createApp} from 'vue'
 import App from './App.vue'
 import {createRouter,createWebHistory} from 'vue-router'
 
+import Vue3DraggableResizable from 'vue3-draggable-resizable'
+//需引入默认样式
+import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
+
+
 import SelectBack from './components/SelectBack.vue'
 import SelectWater from './components/SelectWater.vue'
 import Set from './components/Set.vue'
@@ -20,8 +25,6 @@ const router =createRouter({
     routes
 })
 
-const app=createApp(App)
-app.use(store)
-app.use(router)
+createApp(App).use(Vue3DraggableResizable).use(store).use(router).mount('#app')
 
-app.mount('#app')
+ 

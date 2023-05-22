@@ -8,164 +8,194 @@
             <span><label for="height">高度：</label><input v-model="height" id="height" /> </span>
 
         </div>
-      
-        <div class="set" :style="backStyle"> 
-            <img class="back"   :src="'data:image/png;base64,'+store.state.backfileConfig.src" />
-            <img class="water" draggable="true" @dragend="dragend" @dragstart="drag" :style="waterStyle" :src="'data:image/png;base64,'+store.state.waterfileConfig.src" />
+
+        <div class="set" :style="backStyle">
+            <img class="back" :src="'data:image/png;base64,' + store.state.backfileConfig.src" />
+            
+            <Vue3DraggableResizable :initW="width" :initH="height" :x="left" :y="top" :draggable="true" :resizable="true"
+                @drag-end="dragend" @resize-end="resizeend">
+               
+                <img class="w" :src="'data:image/png;base64,' + store.state.waterfileConfig.src" />
+                
+            </Vue3DraggableResizable>
         </div>
-       
-      
+
+
     </div>
 </template>
 <script setup>
- 
- import {computed,ref} from 'vue'
- import {useStore} from 'vuex'
- import {GetSetImage} from '../../wailsjs/go/main/App.js'
 
- const store =useStore()
- const dregStartX=ref(0)
- const dragStartY=ref(0)
- const top =computed({
-    get(){
+import { computed, ref } from 'vue'
+import { useStore } from 'vuex'
+import { GetSetImage } from '../../wailsjs/go/main/App.js'
+
+
+const store = useStore()
+
+const top = computed({
+    get() {
         return store.state.waterfileConfig.top
     },
-    set(value){
+    set(value) {
         console.log(value)
-        store.commit("setWaterfileConfig",{top:value})
+        store.commit("setWaterfileConfig", { top: value })
     }
- })
+})
 
- const left =computed({
-    get(){
+const left = computed({
+    get() {
         return store.state.waterfileConfig.left
     },
-    set(value){
-        store.commit("setWaterfileConfig",{left:value})
+    set(value) {
+        store.commit("setWaterfileConfig", { left: value })
     }
- })
+})
 
- const width =computed({
-    get(){
+const width = computed({
+    get() {
         return store.state.waterfileConfig.width
     },
-    set(value){
-        store.commit("setWaterfileConfig",{width:value})
+    set(value) {
+        store.commit("setWaterfileConfig", { width: value })
     }
- })
+})
 
- const height =computed({
-    get(){
+const height = computed({
+    get() {
         return store.state.waterfileConfig.height
     },
-    set(value){
-        store.commit("setWaterfileConfig",{height:value})
+    set(value) {
+        store.commit("setWaterfileConfig", { height: value })
     }
- })
+})
 
- const waterStyle=computed(()=>{
+const waterStyle = computed(() => {
     console.log(store.state.waterfileConfig)
     return `width:${store.state.waterfileConfig.width}px;height:${store.state.waterfileConfig.height}px;top:${store.state.waterfileConfig.top}px;left:${store.state.waterfileConfig.left}px;`
- })
+})
 
- const backStyle=computed(()=>{
+const backStyle = computed(() => {
     console.log(store.state.backfileConfig)
     return `width:${store.state.backfileConfig.width}px;height:${store.state.backfileConfig.height}px;`
- })
+})
 
- //image拖动结束
- const dragend=(e)=>{
-    console.log(e)
-    let x=e.clientX-dregStartX.value
-    let y=e.clientY-dragStartY.value
+// //image拖动结束
+// const dragend = (e) => {
+//     console.log(e)
+//     let x = e.clientX - dregStartX.value
+//     let y = e.clientY - dragStartY.value
 
-    console.log({x,y})
-    store.commit("setWaterfileConfig",{left:e.target.offsetLeft+x,top:e.target.offsetTop+y})
- }
- 
- //开始拖动image
- const drag=(e)=>{
-    console.log(e)
-    dregStartX.value=e.clientX
-    dragStartY.value=e.clientY
- }
+//     console.log({ x, y })
+//     store.commit("setWaterfileConfig", { left: e.target.offsetLeft + x, top: e.target.offsetTop + y })
+// }
 
- GetSetImage().then((ret)=>{
- 
-    const {WaterFile,BackFile,BackWidth,BackHeight}= ret
-     
-    let width=0
-    let heigh=0
+// //开始拖动image
+// const drag = (e) => {
+//     console.log(e)
+//     dregStartX.value = e.clientX
+//     dragStartY.value = e.clientY
+// }
 
-    if(BackHeight>BackWidth){
-        width=300
-        heigh=BackHeight/BackWidth*width
-    }else{
-        heigh=300
-        width=BackWidth/BackHeight*heigh
+const dragend=(data)=>{
+    console.log(data)
+    store.commit("setWaterfileConfig", { left: data.x, top: data.y })
+}
+
+const resizeend=(data)=>{
+    console.log(data)
+    store.commit("setWaterfileConfig", { left: data.x, top: data.y,width:data.w,height:data.h })
+}
+
+GetSetImage().then((ret) => {
+
+    const { WaterFile, BackFile, BackWidth, BackHeight } = ret
+
+    let width = 0
+    let heigh = 0
+
+    if (BackHeight > BackWidth) {
+        width = 300
+        heigh = BackHeight / BackWidth * width
+    } else {
+        heigh = 300
+        width = BackWidth / BackHeight * heigh
     }
-    
-    store.commit("setBackfileConfig",{
-        src:BackFile,
-        width:width,
-        height:heigh,
-        realWidth:BackWidth,
-        realHeight:BackHeight
+
+    store.commit("setBackfileConfig", {
+        src: BackFile,
+        width: width,
+        height: heigh,
+        realWidth: BackWidth,
+        realHeight: BackHeight
     })
 
-    store.commit("setWaterfileConfig",{src:WaterFile})
+    store.commit("setWaterfileConfig", { src: WaterFile })
 
- })
+})
+
+
 </script>
 <style scoped>
-.ctx{
-    width:90%;
-    margin:20px auto;
+.ctx {
+    width: 90%;
+    margin: 20px auto;
 }
-.ctx .top{
+
+.ctx .top {
     height: 50px;
     line-height: 50px;
     border-bottom: 1px solid #ffffff;
     display: flex;
-    flex-direction: row; 
+    flex-direction: row;
     justify-content: space-around;
 
 }
-.ctx .top input{
-   width:80px;
-   height: 20px;
-   padding: 3px 5px;
-   text-align: right;
-   outline: none;
-    
-   
+
+.ctx .top input {
+    width: 80px;
+    height: 20px;
+    padding: 3px 5px;
+    text-align: right;
+    outline: none;
+
+
 }
-.images{
+
+.images {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    
+
 }
-.images .item{
+
+.images .item {
     margin: 10px;
     width: calc(100%/3 - 20px);
 }
-.images img{
-    width:100%;
+
+.images img {
+    width: 100%;
     /* height: 100%; */
     object-fit: cover;
 }
 
-.set{
-    position:relative;
+.set {
+    position: relative;
     /* border:1px solid red; */
-    margin:30px auto;
+    margin: 30px auto;
 }
-.set .back{
-    width:100%;
+
+.set .back {
+    width: 100%;
     height: 100%;
 }
-.set .water{
-    position:absolute;
+
+.set .water {
+    position: absolute;
+}
+
+.set .w{
+    width: 100%;
+    height: 100%;
 }
 </style>
