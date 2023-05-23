@@ -11,7 +11,7 @@
 <script setup>
  
  import {useStore} from 'vuex'
- import {SetOutDir} from '../../wailsjs/go/main/App.js'
+ import {SetOutDir,Start} from '../../wailsjs/go/main/App.js'
 
 const store =useStore()
 const select=()=>{
@@ -21,7 +21,16 @@ const select=()=>{
 
 }
 const starter=()=>{
-
+    let rate=store.state.backfileConfig.realWidth/store.state.backfileConfig.width
+    Start(store.state.outdir,
+    store.state.waterfileConfig.top,
+    store.state.waterfileConfig.left,
+    store.state.waterfileConfig.width,
+    store.state.waterfileConfig.height,
+    rate
+    ).then(ret=>{
+        console.log(ret)
+    })
 }
 </script>
 <style scoped>

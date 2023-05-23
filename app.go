@@ -4,15 +4,19 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"image"
 	"image/draw"
-	"image/gif"
-	"image/jpeg"
+	_ "image/gif"
+	_ "image/jpeg"
 	"image/png"
+	_ "image/png"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
+	"github.com/duke-git/lancet/strutil"
 	"github.com/nfnt/resize"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -116,8 +120,31 @@ func (a *App) SetOutDir() string {
 	return dir
 }
 
-func (a *App) Start(outdir string, top, left, width, height int) {
-
+func (a *App) Start(outdir string, top, left, width, height int, resizeRate float64) {
+	err := createDir(outdir)
+	if err != nil {
+		msg(a.ctx, "错误", err.Error())
+		return
+	}
+	if len(a.backFiles) == 0 {
+		msg(a.ctx, "错误", "至少要有一张背景图片")
+		return
+	}
+	if len(a.waterFiles) == 0 {
+		msg(a.ctx, "错误", "至少要有一张水印图片")
+		return
+	}
+	realTop := int(float64(top) * resizeRate)
+	realLeft := int(float64(left) * resizeRate)
+	realWidth := int(float64(width) * resizeRate)
+	realHeight := int(float64(height) * resizeRate)
+	for _, backf := range a.backFiles {
+		for _, waterf := range a.waterFiles {
+			nfile := outdir + "/" + getFileName(backf) + "_" + getFileName(waterf) + ".png"
+			err = generate(backf, waterf, nfile, realTop, realLeft, realWidth, realHeight)
+			fmt.Println(err)
+		}
+	}
 }
 
 func SelectImages(ctx context.Context) []string {
@@ -164,22 +191,45 @@ func GetImageWH(file string) (int, int) {
 	return img.Width, img.Height
 }
 
-func GetImage(file *os.File) (*image.Image, error) {
+func GetImage(file *os.File) (image.Image, error) {
+	file.Seek(0, 0)
+	img, str, err := image.Decode(file)
+	fmt.Println(str)
+	return img, err
+	// _, format, err := image.DecodeConfig(file)
+	// if (format != "jpeg" && format != "gif" && format != "png") || err != nil {
+	// 	Loghander("image config", err)
+	// 	return nil, err
+	// }
 
-	img, err := png.Decode(file)
-	if err == nil {
-		return &img, nil
-	}
+	// if format == "jpge" {
+	// 	return jpeg.Decode(file)
+	// } else if format == "png" {
+	// 	return png.Decode(file)
+	// } else if format == "gif" {
+	// 	return gif.Decode(file)
+	// }
+	// return nil, errors.New("未知类型")
 
-	img, err = jpeg.Decode(file)
-	if err == nil {
-		return &img, nil
-	}
-	img, err = gif.Decode(file)
-	if err == nil {
-		return &img, nil
-	}
-	return nil, errors.New("未知类型")
+	// img, err := png.Decode(file)
+	// if err == nil {
+
+	// 	return &img, nil
+	// }
+	// Loghander("png", err)
+	// img, err = jpeg.Decode(file)
+	// if err == nil {
+
+	// 	return &img, nil
+	// }
+	// Loghander("jpg", err)
+	// img, err = gif.Decode(file)
+	// if err == nil {
+
+	// 	return &img, nil
+	// }
+	// Loghander("gif", err)
+
 }
 
 func Loghander(message string, err error) {
@@ -209,12 +259,12 @@ func generate(backFile, waterFile, savefile string, top, left, width, height int
 		return err
 	}
 
-	*wImg = resize.Resize(uint(width), uint(height), *wImg, resize.Lanczos3)
+	wImg = resize.Resize(uint(width), uint(height), wImg, resize.Lanczos3)
 
-	bimgBounds := (*bImg).Bounds()
+	bimgBounds := (bImg).Bounds()
 	m := image.NewRGBA(bimgBounds)
-	draw.Draw(m, bimgBounds, *bImg, image.Point{0, 0}, draw.Src)
-	draw.Draw(m, (*wImg).Bounds().Add(image.Pt(int(left), int(top))), *wImg, image.Point{0, 0}, draw.Src)
+	draw.Draw(m, bimgBounds, bImg, image.Point{0, 0}, draw.Src)
+	draw.Draw(m, wImg.Bounds().Add(image.Pt(int(left), int(top))), wImg, image.Point{0, 0}, draw.Src)
 	imgDist, err := os.Create(savefile)
 	if err != nil {
 		return err
@@ -223,4 +273,30 @@ func generate(backFile, waterFile, savefile string, top, left, width, height int
 	png.Encode(imgDist, m)
 
 	return nil
+}
+
+func createDir(path string) error {
+	f, err := os.Stat(path)
+	if err == nil {
+		if f.IsDir() {
+			return nil
+		}
+		return errors.New(path + "已经存在且不是一个目录")
+	}
+	return os.MkdirAll(path, 0666)
+}
+
+func getFileName(path string) string {
+
+	return strutil.BeforeLast(filepath.Base(path), ".")
+
+}
+
+func msg(ctx context.Context, title, message string) {
+	runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
+		Type:          runtime.InfoDialog,
+		Title:         title,
+		Message:       message,
+		DefaultButton: "Ok",
+	})
 }

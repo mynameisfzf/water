@@ -14,4 +14,4 @@ export function SelectWaterFiles():Promise<void>;
 
 export function SetOutDir():Promise<string>;
 
-export function Start(arg1:string,arg2:number,arg3:number,arg4:number,arg5:number):Promise<void>;
+export function Start(arg1:string,arg2:number,arg3:number,arg4:number,arg5:number,arg6:number):Promise<void>;
