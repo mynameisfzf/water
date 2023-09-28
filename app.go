@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -14,7 +15,6 @@ import (
 	_ "image/jpeg"
 	"image/png"
 	_ "image/png"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -22,8 +22,8 @@ import (
 // App struct
 type App struct {
 	ctx        context.Context
-	backFiles  []string
-	waterFiles []string
+	backFiles  map[string]string
+	waterFiles map[string]string
 }
 
 type SetImage struct {
@@ -37,7 +37,10 @@ type SetImage struct {
 }
 
 func NewApp() *App {
-	return &App{}
+	return &App{
+		backFiles:  map[string]string{},
+		waterFiles: map[string]string{},
+	}
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -45,58 +48,98 @@ func (a *App) startup(ctx context.Context) {
 }
 
 func (a *App) SelectBackFiles() {
-	a.backFiles = SelectImages(a.ctx)
-}
-
-func (a *App) GetBackFiles() (ret []string) {
-	for _, file := range a.backFiles {
+	files := SelectImages(a.ctx)
+	for _, file := range files {
 		data, err := GetImageBase64(file)
 		if err != nil {
 			runtime.LogError(a.ctx, err.Error())
+			msg(a.ctx, "出错了", err.Error())
 			return
 		}
-		ret = append(ret, data)
+		a.backFiles[file] = data
 	}
-	return
+
+}
+
+func (a *App) GetBackFiles() map[string]string {
+	return a.backFiles
 }
 
 func (a *App) SelectWaterFiles() {
-	a.waterFiles = SelectImages(a.ctx)
-}
-
-func (a *App) GetWaterFiles() (ret []string) {
-	for _, file := range a.waterFiles {
+	files := SelectImages(a.ctx)
+	for _, file := range files {
 		data, err := GetImageBase64(file)
 		if err != nil {
 			runtime.LogError(a.ctx, err.Error())
+			msg(a.ctx, "出错了", err.Error())
 			return
 		}
-		ret = append(ret, data)
+		a.waterFiles[file] = data
 	}
 	return
 }
 
-func (a *App) GetSetImage() (ret SetImage) {
-	if len(a.backFiles) > 0 {
-		data, err := GetImageBase64(a.backFiles[0])
-		if err != nil {
-			runtime.LogError(a.ctx, err.Error())
-			return
-		}
-		ret.BackWidth, ret.BackHeight = GetImageWH(a.backFiles[0])
-		ret.BackFile = data
-	}
+func (a *App) GetWaterFiles() map[string]string {
+	return a.waterFiles
+}
 
-	if len(a.waterFiles) > 0 {
-		data, err := GetImageBase64(a.waterFiles[0])
-		if err != nil {
-			runtime.LogError(a.ctx, err.Error())
-			return
-		}
-		ret.WaterFile = data
-		ret.WaterWidth, ret.WaterHeight = GetImageWH(a.waterFiles[0])
+func (a *App) Delimg(name string, typ int) map[string]string {
+	if typ > 0 {
+		//水印
+		delete(a.waterFiles, name)
+		return a.waterFiles
+	}
+	delete(a.backFiles, name)
+	return a.backFiles
+}
+func (a *App) GetSetImage() (ret SetImage) {
+	err := a.getBackFileOne(&ret)
+	if err != nil {
+		msg(a.ctx, "出错了", err.Error())
+		return
+	}
+	err = a.getWaterFileOne(&ret)
+	if err != nil {
+		msg(a.ctx, "出错了", err.Error())
+
 	}
 	return
+}
+
+func (a *App) getBackFileOne(conf *SetImage) error {
+	for _, data := range a.backFiles {
+		d, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			return err
+		}
+		config, _, err := image.DecodeConfig(bytes.NewReader(d))
+		if err != nil {
+			return err
+		}
+		conf.BackFile = data
+		conf.BackWidth = config.Width
+		conf.BackHeight = config.Height
+		return nil
+	}
+	return errors.New("没有设置背景图片")
+}
+
+func (a *App) getWaterFileOne(conf *SetImage) error {
+	for _, data := range a.waterFiles {
+		d, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			return err
+		}
+		config, _, err := image.DecodeConfig(bytes.NewReader(d))
+		if err != nil {
+			return err
+		}
+		conf.WaterFile = data
+		conf.WaterWidth = config.Width
+		conf.WaterHeight = config.Height
+		return nil
+	}
+	return errors.New("没有设置背景图片")
 }
 
 func (a *App) SetOutDir() string {
@@ -170,7 +213,7 @@ func SelectDir(ctx context.Context) (string, error) {
 }
 
 func GetImageBase64(file string) (string, error) {
-	src, err := ioutil.ReadFile(file)
+	src, err := os.ReadFile(file)
 	if err != nil {
 		return "", err
 	}
