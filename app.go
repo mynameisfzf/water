@@ -171,10 +171,10 @@ func (a *App) Start(outdir string, top, left, width, height int, resizeRate floa
 	realHeight := int(float64(height) * resizeRate)
 	total := len(a.backFiles) * len(a.waterFiles)
 	index := 0
-	for _, backf := range a.backFiles {
-		for _, waterf := range a.waterFiles {
+	for bfName, backf := range a.backFiles {
+		for wfName, waterf := range a.waterFiles {
 			index++
-			nfile := outdir + "/" + getFileName(backf) + "_" + getFileName(waterf) + ".png"
+			nfile := outdir + "/" + getFileName(bfName) + "_" + getFileName(wfName) + ".png"
 			err = generate(backf, waterf, nfile, realTop, realLeft, realWidth, realHeight)
 			if err != nil {
 				runtime.LogError(a.ctx, err.Error())
@@ -183,7 +183,6 @@ func (a *App) Start(outdir string, top, left, width, height int, resizeRate floa
 			}
 			rate := 100 * index / total
 			runtime.EventsEmit(a.ctx, "starting", rate)
-			//time.Sleep(time.Millisecond * 100)
 		}
 
 	}
@@ -220,23 +219,13 @@ func GetImageBase64(file string) (string, error) {
 	return base64.StdEncoding.EncodeToString(src), nil
 }
 
-func GetImageWH(file string) (int, int) {
-	handle, err := os.Open(file)
-	Loghander("打开文件失败", err)
+func getImageByData(data string) (image.Image, error) {
+	src, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-
-		return 0, 0
+		return nil, err
 	}
-	defer handle.Close()
-	img, _, err := image.DecodeConfig(handle)
-	Loghander("打开图片失败", err)
-	return img.Width, img.Height
-}
-
-func GetImage(file *os.File) (image.Image, error) {
-	file.Seek(0, 0)
-	img, _, err := image.Decode(file)
-
+	reader := bytes.NewReader(src)
+	img, _, err := image.Decode(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +235,7 @@ func GetImage(file *os.File) (image.Image, error) {
 	return img, nil
 }
 
-func Loghander(message string, err error) {
+func loghander(message string, err error) {
 	if err != nil {
 		str := fmt.Sprintf("%s %s", message, err)
 		runtime.LogError(context.Background(), str)
@@ -255,22 +244,11 @@ func Loghander(message string, err error) {
 }
 
 func generate(backFile, waterFile, savefile string, top, left, width, height int) error {
-	back, err := os.Open(backFile)
+	bImg, err := getImageByData(backFile)
 	if err != nil {
 		return err
 	}
-	defer back.Close()
-	water, err := os.Open(waterFile)
-	if err != nil {
-		return err
-	}
-	defer water.Close()
-
-	bImg, err := GetImage(back)
-	if err != nil {
-		return err
-	}
-	wImg, err := GetImage(water)
+	wImg, err := getImageByData(waterFile)
 	if err != nil {
 		return err
 	}
@@ -286,9 +264,8 @@ func generate(backFile, waterFile, savefile string, top, left, width, height int
 		return err
 	}
 	defer imgDist.Close()
-	png.Encode(imgDist, m)
+	return png.Encode(imgDist, m)
 
-	return nil
 }
 
 func createDir(path string) error {
@@ -303,9 +280,7 @@ func createDir(path string) error {
 }
 
 func getFileName(path string) string {
-
 	return strutil.BeforeLast(filepath.Base(path), ".")
-
 }
 
 func msg(ctx context.Context, title, message string) {
