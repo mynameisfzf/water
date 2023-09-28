@@ -63,7 +63,7 @@ body {
 }
 .ctx .images .item{
     margin: 10px;
-    width: calc(100%/6 - 10px);
+    width: calc(100%/8 - 10px);
     position: relative;
 }
 .ctx .images img{

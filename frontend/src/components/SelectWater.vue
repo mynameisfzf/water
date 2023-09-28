@@ -1,7 +1,7 @@
 <template>
     <div class="ctx">
         <div class="top">
-            <span class="title">选择水印图</span>
+            <span class="title">选择水印图(已选择{{ total }}张图片)</span>
             <router-link class="next" to="/set" v-if="showImg">下一步</router-link>
         </div>
 
@@ -40,12 +40,11 @@
 <script setup>
 import {ref} from 'vue'
 
-import {GetWaterFiles, SelectWaterFiles,Delimg} from '../../wailsjs/go/main/App.js'
-import {LogPrint} from '../../wailsjs/runtime/runtime.js'
+import {Delimg, GetWaterFiles, SelectWaterFiles} from '../../wailsjs/go/main/App.js'
 
 const files = ref({})
 const showImg = ref(false)
-
+const total = ref(0)
 const select = () => {
     SelectWaterFiles().then(() => {
         getFile()
@@ -53,7 +52,7 @@ const select = () => {
 }
 
 const delImg = (file) => {
-    Delimg(file,1).then(()=>{
+    Delimg(file, 1).then(() => {
         getFile()
     })
 }
@@ -65,7 +64,7 @@ const getFile = () => {
         }
         files.value = ret
         showImg.value = Object.keys(ret).length > 0
-        LogPrint(Object.keys(ret).length)
+        total.value = Object.keys(ret).length
     })
 }
 
