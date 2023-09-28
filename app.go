@@ -5,6 +5,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/duke-git/lancet/strutil"
+	"github.com/nfnt/resize"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"image"
 	"image/draw"
 	_ "image/gif"
@@ -12,13 +15,8 @@ import (
 	"image/png"
 	_ "image/png"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/duke-git/lancet/strutil"
-	"github.com/nfnt/resize"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -26,7 +24,6 @@ type App struct {
 	ctx        context.Context
 	backFiles  []string
 	waterFiles []string
-	// outDir     string
 }
 
 type SetImage struct {
@@ -39,16 +36,12 @@ type SetImage struct {
 	BackHeight int
 }
 
-// NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{}
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-
 }
 
 func (a *App) SelectBackFiles() {
@@ -84,17 +77,14 @@ func (a *App) GetWaterFiles() (ret []string) {
 }
 
 func (a *App) GetSetImage() (ret SetImage) {
-
 	if len(a.backFiles) > 0 {
 		data, err := GetImageBase64(a.backFiles[0])
 		if err != nil {
 			runtime.LogError(a.ctx, err.Error())
 			return
 		}
-
 		ret.BackWidth, ret.BackHeight = GetImageWH(a.backFiles[0])
 		ret.BackFile = data
-
 	}
 
 	if len(a.waterFiles) > 0 {
@@ -106,8 +96,6 @@ func (a *App) GetSetImage() (ret SetImage) {
 		ret.WaterFile = data
 		ret.WaterWidth, ret.WaterHeight = GetImageWH(a.waterFiles[0])
 	}
-
-	// fmt.Println(ret)
 	return
 }
 
@@ -138,13 +126,25 @@ func (a *App) Start(outdir string, top, left, width, height int, resizeRate floa
 	realLeft := int(float64(left) * resizeRate)
 	realWidth := int(float64(width) * resizeRate)
 	realHeight := int(float64(height) * resizeRate)
+	total := len(a.backFiles) * len(a.waterFiles)
+	index := 0
 	for _, backf := range a.backFiles {
 		for _, waterf := range a.waterFiles {
+			index++
 			nfile := outdir + "/" + getFileName(backf) + "_" + getFileName(waterf) + ".png"
 			err = generate(backf, waterf, nfile, realTop, realLeft, realWidth, realHeight)
-			fmt.Println(err)
+			if err != nil {
+				runtime.LogError(a.ctx, err.Error())
+				msg(a.ctx, "出错了", err.Error())
+				return
+			}
+			rate := 100 * index / total
+			runtime.EventsEmit(a.ctx, "starting", rate)
+			//time.Sleep(time.Millisecond * 100)
 		}
+
 	}
+	msg(a.ctx, "完成了", "图片已全部生成")
 }
 
 func SelectImages(ctx context.Context) []string {
@@ -187,54 +187,27 @@ func GetImageWH(file string) (int, int) {
 	defer handle.Close()
 	img, _, err := image.DecodeConfig(handle)
 	Loghander("打开图片失败", err)
-	// log.Println(s)
 	return img.Width, img.Height
 }
 
 func GetImage(file *os.File) (image.Image, error) {
 	file.Seek(0, 0)
-	img, str, err := image.Decode(file)
-	fmt.Println(str)
-	return img, err
-	// _, format, err := image.DecodeConfig(file)
-	// if (format != "jpeg" && format != "gif" && format != "png") || err != nil {
-	// 	Loghander("image config", err)
-	// 	return nil, err
-	// }
+	img, _, err := image.Decode(file)
 
-	// if format == "jpge" {
-	// 	return jpeg.Decode(file)
-	// } else if format == "png" {
-	// 	return png.Decode(file)
-	// } else if format == "gif" {
-	// 	return gif.Decode(file)
-	// }
-	// return nil, errors.New("未知类型")
-
-	// img, err := png.Decode(file)
-	// if err == nil {
-
-	// 	return &img, nil
-	// }
-	// Loghander("png", err)
-	// img, err = jpeg.Decode(file)
-	// if err == nil {
-
-	// 	return &img, nil
-	// }
-	// Loghander("jpg", err)
-	// img, err = gif.Decode(file)
-	// if err == nil {
-
-	// 	return &img, nil
-	// }
-	// Loghander("gif", err)
-
+	if err != nil {
+		return nil, err
+	}
+	if img == nil {
+		return nil, errors.New("未知图片格式")
+	}
+	return img, nil
 }
 
 func Loghander(message string, err error) {
 	if err != nil {
-		log.Printf("%s %s", message, err)
+		str := fmt.Sprintf("%s %s", message, err)
+		runtime.LogError(context.Background(), str)
+		msg(context.Background(), "出错了", str)
 	}
 }
 

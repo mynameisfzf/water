@@ -7,11 +7,11 @@
 
     <div class="images" v-if="store.state.backfile.length>0">
       <div v-for="(file,index) in store.state.backfile" :key="index" class="item">
-        <img :src="'data:image/png;base64,'+file"/>
+        <img :src="'data:image/png;base64,'+file" />
       </div>
 
     </div>
-    <div v-else class="select" @click="select">
+    <div v-else class="select" @click="select" title="浏览">
 
       <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 48 48">
         <linearGradient id="xGIh33lbYX9pWIYWeZsuka_zRCxfHhAkOiL_gr1" x1="24" x2="24" y1="6.955" y2="23.167"
@@ -38,7 +38,7 @@
 
 import {useStore} from 'vuex'
 import {GetBackFiles, SelectBackFiles} from '../../wailsjs/go/main/App.js'
-
+//
 const store = useStore()
 console.log(store.state.backfile.length)
 const select = () => {
@@ -48,10 +48,7 @@ const select = () => {
 
     })
   })
-
 }
+
 </script>
-<style scoped>
 
-
-</style>

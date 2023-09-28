@@ -6,7 +6,7 @@
 
             <span><label for="width">宽度：</label><input v-model="width" id="width" /> </span>
             <span><label for="height">高度：</label><input v-model="height" id="height" /> </span>
-
+            <span class="next" @click="start">确定</span>
         </div>
 
         <div class="set" :style="backStyle">
@@ -22,16 +22,29 @@
 
 
     </div>
+   <div class="modal" v-if="showModal">
+      <div>{{rate}}%</div>
+   </div>
 </template>
 <script setup>
 
-import { computed, ref } from 'vue'
+import { computed ,ref} from 'vue'
 import { useStore } from 'vuex'
-import { GetSetImage } from '../../wailsjs/go/main/App.js'
+import { useRouter } from 'vue-router'
+import {GetSetImage, SetOutDir, Start} from '../../wailsjs/go/main/App.js'
+import {EventsOn,LogPrint} from '../../wailsjs/runtime/runtime.js'
 
 
 const store = useStore()
+const router=useRouter()
 
+const rate=ref(0)
+const showModal=ref(false)
+EventsOn("starting",(ret)=>{
+  //图片生成中
+  LogPrint(ret)
+  rate.value=ret
+})
 const top = computed({
     get() {
         return store.state.waterfileConfig.top
@@ -70,22 +83,22 @@ const height = computed({
 })
 
 const waterStyle = computed(() => {
-    console.log(store.state.waterfileConfig)
+
     return `width:${store.state.waterfileConfig.width}px;height:${store.state.waterfileConfig.height}px;top:${store.state.waterfileConfig.top}px;left:${store.state.waterfileConfig.left}px;`
 })
 
 const backStyle = computed(() => {
-    console.log(store.state.backfileConfig)
+
     return `width:${store.state.backfileConfig.width}px;height:${store.state.backfileConfig.height}px;`
 })
 
 const dragend=(data)=>{
-    console.log(data)
+
     store.commit("setWaterfileConfig", { left: data.x, top: data.y })
 }
 
 const resizeend=(data)=>{
-    console.log(data)
+
     store.commit("setWaterfileConfig", { left: data.x, top: data.y,width:data.w,height:data.h })
 }
 
@@ -116,6 +129,28 @@ GetSetImage().then((ret) => {
 
 })
 
+const start=()=>{
+  //开始生成
+
+  SetOutDir().then((dir)=>{
+    if(!dir){
+      return
+    }
+    showModal.value=true
+    let rate=store.state.backfileConfig.realWidth/store.state.backfileConfig.width
+    Start(dir,
+        store.state.waterfileConfig.top,
+        store.state.waterfileConfig.left,
+        store.state.waterfileConfig.width,
+        store.state.waterfileConfig.height,
+        rate
+    ).then(()=>{
+        router.push({path:"/"})
+    }).throw(()=>{
+      showModal.value=false
+    })
+  })
+}
 
 </script>
 <style scoped>
@@ -180,5 +215,19 @@ GetSetImage().then((ret) => {
 .set .w{
     width: 100%;
     height: 100%;
+}
+.modal{
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color:rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal div{
+  font-size: 50px;
 }
 </style>
